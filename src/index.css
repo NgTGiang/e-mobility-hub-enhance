@@ -1,0 +1,154 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --color-brand: #16a34a;
+  --color-brand-strong: #15803d;
+  --color-brand-soft: #dcfce7;
+  --color-mint: #a7f3d0;
+  --color-lime: #84cc16;
+  --color-page: #fafbf7;
+  --color-surface-muted: #f8fafc;
+  --color-ink: #0f172a;
+  --color-ink-muted: #64748b;
+  --color-line: #e5e7eb;
+  --color-success: #22c55e;
+  --color-info: #2563eb;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+  --color-unavailable: #94a3b8;
+  --shadow-card: 0 1px 2px rgb(15 23 42 / 0.04), 0 8px 24px rgb(15 23 42 / 0.04);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-line);
+  }
+
+  html {
+    font-family: var(--font-sans);
+    background: var(--color-page);
+    color: var(--color-ink);
+    scroll-behavior: smooth;
+  }
+
+  body {
+    min-width: 320px;
+    min-height: 100vh;
+    margin: 0;
+    background: var(--color-page);
+  }
+
+  button,
+  a,
+  input {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  button {
+    cursor: pointer;
+  }
+
+  :where(a, button, input, select, textarea):focus-visible {
+    outline: 3px solid color-mix(in srgb, var(--color-brand) 45%, white);
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  .button-primary {
+    display: inline-flex;
+    min-height: 2.75rem;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: 0.75rem;
+    background: var(--color-brand);
+    padding-inline: 1rem;
+    color: white;
+    font-size: 0.875rem;
+    font-weight: 600;
+    box-shadow: 0 1px 2px rgb(15 23 42 / 0.08);
+    transition: 160ms ease;
+  }
+
+  .button-primary:hover {
+    background: var(--color-brand-strong);
+  }
+
+  .button-secondary {
+    display: inline-flex;
+    min-height: 2.75rem;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border: 1px solid var(--color-line);
+    border-radius: 0.75rem;
+    background: white;
+    padding-inline: 1rem;
+    color: var(--color-ink);
+    font-size: 0.875rem;
+    font-weight: 600;
+    transition: 160ms ease;
+  }
+
+  .button-secondary:hover {
+    border-color: color-mix(in srgb, var(--color-brand) 40%, white);
+    background: var(--color-brand-soft);
+  }
+
+  .button-primary:focus-visible,
+  .button-secondary:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 4px rgb(22 163 74 / 0.16);
+  }
+
+  .menu-link {
+    display: flex;
+    min-height: 2.5rem;
+    align-items: center;
+    gap: 0.625rem;
+    border-radius: 0.625rem;
+    padding-inline: 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--color-ink-muted);
+    transition: 150ms ease;
+  }
+
+  .menu-link:hover {
+    background: var(--color-surface-muted);
+    color: var(--color-ink);
+  }
+
+  .skip-link {
+    position: fixed;
+    left: 1rem;
+    top: 1rem;
+    z-index: 100;
+    transform: translateY(-180%);
+    border-radius: 0.75rem;
+    background: var(--color-ink);
+    padding: 0.75rem 1rem;
+    color: white;
+    font-size: 0.875rem;
+    font-weight: 600;
+    transition: transform 150ms ease;
+  }
+
+  .skip-link:focus {
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

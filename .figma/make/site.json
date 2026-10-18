@@ -1,0 +1,12 @@
+{
+  "title": "Smart E-Mobility Hub",
+  "description": "Hệ thống mô phỏng điều phối phương tiện điện và tài nguyên di chuyển trong Khu đô thị ĐHQG-HCM.",
+  "language": "vi",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
