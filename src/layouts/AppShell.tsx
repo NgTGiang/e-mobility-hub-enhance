@@ -8,14 +8,15 @@ import {
   Settings,
   UserRound,
   X,
+  Zap,
 } from "lucide-react"
 import { useEffect, useState } from "react"
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router"
-import { BrandMark } from "@/components/BrandMark"
+import { OperatorSidebar } from "@/components/operator/OperatorSidebar"
 import { StudentSidebar } from "@/components/student/StudentSidebar"
 import { Button } from "@/components/ui/Button"
 import { useAppStore } from "@/store/appStore"
-import type { NavigationItem } from "@/app/navigation"
+import { getActiveOperatorNavigation, type NavigationItem } from "@/app/navigation"
 
 interface AppShellProps {
   navigation: NavigationItem[]
@@ -25,65 +26,24 @@ interface AppShellProps {
 function SidebarContent({
   navigation,
   onNavigate,
-  studentMode = false,
+  studentMode,
   onLogout,
-  unreadNotifications = 0,
+  unreadNotifications,
 }: {
   navigation: NavigationItem[]
   onNavigate?: () => void
-  studentMode?: boolean
+  studentMode: boolean
   onLogout: () => void
-  unreadNotifications?: number
+  unreadNotifications: number
 }) {
-  if (studentMode) {
-    return (
-      <StudentSidebar
-        navigation={navigation}
-        onNavigate={onNavigate}
-        onLogout={onLogout}
-        unreadNotifications={unreadNotifications}
-      />
-    )
-  }
+  const Sidebar = studentMode ? StudentSidebar : OperatorSidebar
   return (
-    <>
-      <div className="border-b border-line p-5">
-        <BrandMark />
-      </div>
-      <nav
-        className="flex-1 space-y-1 overflow-y-auto p-3"
-        aria-label="Điều hướng chính"
-      >
-        {navigation.map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            onClick={onNavigate}
-            className={({ isActive }) =>
-              `flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-medium transition ${
-                isActive
-                  ? "bg-brand-soft text-brand-strong"
-                  : "text-ink-muted hover:bg-surface-muted hover:text-ink"
-              }`
-            }
-          >
-            <item.icon className="size-5" aria-hidden="true" />
-            {item.label}
-          </NavLink>
-        ))}
-      </nav>
-      <div className="border-t border-line p-4">
-        <div className="rounded-xl bg-surface-muted p-3">
-          <div className="flex items-center gap-2 text-xs font-semibold text-brand-strong">
-            <span className="size-2 rounded-full bg-success" />
-            Dữ liệu mô phỏng
-          </div>
-          <p className="mt-1 text-xs leading-5 text-ink-muted">
-            Cập nhật lần cuối: 08:30, 18/03/2026
-          </p>
-        </div>
-      </div>
-    </>
+    <Sidebar
+      navigation={navigation}
+      onNavigate={onNavigate}
+      onLogout={onLogout}
+      unreadNotifications={unreadNotifications}
+    />
   )
 }
 
@@ -95,6 +55,10 @@ export function AppShell({ navigation, portalLabel }: AppShellProps) {
   const navigate = useNavigate()
   const location = useLocation()
   const isStudent = currentUser?.role === "STUDENT"
+  const isOperator = currentUser?.role === "OPERATOR"
+  const activeOperator = isOperator
+    ? getActiveOperatorNavigation(location.pathname, navigation)
+    : null
 
   useEffect(() => {
     if (!mobileOpen && !userOpen) return
@@ -108,13 +72,15 @@ export function AppShell({ navigation, portalLabel }: AppShellProps) {
     return () => window.removeEventListener("keydown", handleEscape)
   }, [mobileOpen, userOpen])
 
-  const currentLabel =
-    navigation
-      .flatMap((item) => [item, ...(item.children ?? [])])
-      .filter((item) =>
-        location.pathname === item.to || location.pathname.startsWith(item.to + "/"),
-      )
-      .sort((a, b) => b.to.length - a.to.length)[0]?.label ?? portalLabel
+  const currentLabel = isOperator
+    ? (activeOperator?.child?.label ?? activeOperator?.group.label ?? portalLabel)
+    : (navigation
+        .flatMap((item) => [item, ...(item.children ?? [])])
+        .filter((item) =>
+          location.pathname === item.to ||
+          location.pathname.startsWith(item.to + "/"),
+        )
+        .sort((a, b) => b.to.length - a.to.length)[0]?.label ?? portalLabel)
 
   const handleLogout = () => {
     logout()
@@ -131,14 +97,20 @@ export function AppShell({ navigation, portalLabel }: AppShellProps) {
   return (
     <div className="min-h-screen bg-page text-ink">
       <aside
-        className={`fixed inset-y-0 left-0 z-30 hidden flex-col border-r transition-[width] lg:flex ${isStudent ? "border-white/10 bg-[#091b30] text-white" : "border-line bg-white"} ${
-          desktopCollapsed ? "w-20" : isStudent ? "w-72" : "w-64"
+        className={`fixed inset-y-0 left-0 z-30 hidden flex-col border-r transition-[width] lg:flex border-white/10 bg-[#091b30] text-white ${
+          desktopCollapsed ? "w-20" : "w-72"
         }`}
       >
         {desktopCollapsed ? (
           <>
-            <div className="grid h-20 place-items-center border-b border-line">
-              <BrandMark compact />
+            <div className="grid h-20 place-items-center border-b border-white/10">
+              <Link
+                to={isStudent ? "/student/dashboard" : "/operator/dashboard"}
+                aria-label="VNUmove - Về tổng quan"
+                className="grid size-12 place-items-center rounded-2xl bg-emerald-400 text-[#091b30]"
+              >
+                <Zap className="size-7" aria-hidden="true" />
+              </Link>
             </div>
             <nav
               className="flex-1 space-y-2 p-3"
@@ -149,24 +121,23 @@ export function AppShell({ navigation, portalLabel }: AppShellProps) {
                   key={item.to}
                   to={item.to}
                   title={item.label}
-                  className={({ isActive }) =>
-                    `grid size-12 place-items-center rounded-xl transition ${
-                      isActive
-                        ? isStudent
-                          ? "bg-emerald-400/15 text-emerald-300"
-                          : "bg-brand-soft text-brand-strong"
-                        : isStudent
-                          ? "text-slate-300 hover:bg-white/10 hover:text-white"
-                          : "text-ink-muted hover:bg-surface-muted"
+                  className={({ isActive }) => {
+                    const active = isOperator
+                      ? activeOperator?.group.to === item.to
+                      : isActive
+                    return `grid size-12 place-items-center rounded-xl transition ${
+                      active
+                        ? "bg-emerald-400/15 text-emerald-300"
+                        : "text-slate-300 hover:bg-white/10 hover:text-white"
                     }`
-                  }
+                  }}
                 >
                   <item.icon className="size-5" aria-hidden="true" />
                   <span className="sr-only">{item.label}</span>
                 </NavLink>
               ))}
             </nav>
-            {isStudent ? (
+            {(isStudent || isOperator) ? (
               <div className="flex flex-col items-center gap-1 border-t border-white/10 p-2">
                 <Link to="/notifications" aria-label="Thông báo" title="Thông báo" className="relative grid size-11 place-items-center rounded-xl text-slate-300 hover:bg-white/10">
                   <Bell className="size-5" />
@@ -175,7 +146,9 @@ export function AppShell({ navigation, portalLabel }: AppShellProps) {
                   ) : null}
                 </Link>
                 <Link to="/profile" aria-label="Thông tin cá nhân" title="Thông tin cá nhân" className="grid size-11 place-items-center rounded-xl text-slate-300 hover:bg-white/10"><UserRound className="size-5" /></Link>
-                <Link to="/student/settings" aria-label="Cài đặt" title="Cài đặt" className="grid size-11 place-items-center rounded-xl text-slate-300 hover:bg-white/10"><Settings className="size-5" /></Link>
+                {isStudent ? (
+                  <Link to="/student/settings" aria-label="Cài đặt" title="Cài đặt" className="grid size-11 place-items-center rounded-xl text-slate-300 hover:bg-white/10"><Settings className="size-5" /></Link>
+                ) : null}
                 <button type="button" onClick={handleLogout} aria-label="Đăng xuất" title="Đăng xuất" className="grid size-11 place-items-center rounded-xl text-slate-300 hover:bg-white/10"><LogOut className="size-5" /></button>
               </div>
             ) : null}
@@ -197,10 +170,10 @@ export function AppShell({ navigation, portalLabel }: AppShellProps) {
             onClick={() => setMobileOpen(false)}
             aria-label="Đóng điều hướng"
           />
-          <aside className={isStudent ? "relative flex h-full w-[min(86vw,20rem)] flex-col bg-[#091b30] text-white shadow-2xl" : "relative flex h-full w-[min(86vw,20rem)] flex-col bg-white shadow-2xl"}>
+          <aside className="relative flex h-full w-[min(86vw,20rem)] flex-col bg-[#091b30] text-white shadow-2xl">
             <Button
               variant="ghost"
-              className={isStudent ? "absolute right-3 top-3 z-10 !px-3 !text-white" : "absolute right-3 top-3 z-10 !px-3"}
+              className="absolute right-3 top-3 z-10 !px-3 !text-white"
               onClick={() => setMobileOpen(false)}
               aria-label="Đóng"
               autoFocus
@@ -220,7 +193,7 @@ export function AppShell({ navigation, portalLabel }: AppShellProps) {
 
       <div
         className={`transition-[padding] ${
-          desktopCollapsed ? "lg:pl-20" : isStudent ? "lg:pl-72" : "lg:pl-64"
+          desktopCollapsed ? "lg:pl-20" : "lg:pl-72"
         }`}
       >
         <header className="sticky top-0 z-20 flex h-18 items-center justify-between border-b border-line bg-white/95 px-4 backdrop-blur md:px-7">
