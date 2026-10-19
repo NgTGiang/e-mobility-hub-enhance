@@ -391,12 +391,19 @@ export function MyVehicleBookingPage() {
   const reservation = data.vehicleReservations.find(
     (item) => item.userId === currentUser?.id && item.status === "CONFIRMED",
   )
+  const activeReservation = data.vehicleReservations.find(
+    (item) => item.userId === currentUser?.id && item.status === "ACTIVE",
+  )
   if (!reservation) {
     return (
       <div className="space-y-6">
-        <PageHeader eyebrow="ST-05" title="Xe đã đặt" description="Quản lý lượt đặt xe đang chờ nhận." />
+        <PageHeader eyebrow="ST-05" title="Xe đã đặt / Đang sử dụng" description="Quản lý xe đã đặt hoặc chuyển đến chuyến đi đang hoạt động." />
         {notice ? <Notice tone={notice.ok ? "success" : "error"}>{notice.message}</Notice> : null}
-        <EmptyState icon={Bike} title="Bạn chưa có xe đã đặt" description="Tìm một phương tiện phù hợp để bắt đầu hành trình." action={<Link className="button-primary" to="/student/vehicles">Tìm phương tiện</Link>} />
+        {activeReservation ? (
+          <EmptyState icon={Route} title="Bạn đang sử dụng phương tiện" description={"Chuyến đi " + activeReservation.id + " đang hoạt động."} action={<Link className="button-primary" to="/student/active-trip">Xem chuyến đi hiện tại</Link>} />
+        ) : (
+          <EmptyState icon={Bike} title="Bạn chưa có xe đã đặt" description="Tìm một phương tiện phù hợp để bắt đầu hành trình." action={<Link className="button-primary" to="/student/vehicles">Tìm phương tiện</Link>} />
+        )}
       </div>
     )
   }
@@ -413,7 +420,7 @@ export function MyVehicleBookingPage() {
   }
   return (
     <div className="space-y-6">
-      <PageHeader eyebrow="ST-05" title="Xe đã đặt" description="Đến đúng Mobility Hub và xác nhận nhận xe khi bạn đã ở cạnh phương tiện." />
+      <PageHeader eyebrow="ST-05" title="Xe đã đặt / Đang sử dụng" description="Đến đúng Mobility Hub và xác nhận nhận xe khi bạn đã ở cạnh phương tiện." />
       {notice ? <Notice tone={notice.ok ? "success" : "error"}>{notice.message}</Notice> : null}
       <div className="grid gap-6 lg:grid-cols-[1fr_.7fr]">
         <Card>

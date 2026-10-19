@@ -5,12 +5,14 @@ import {
   Menu,
   PanelLeftClose,
   RotateCcw,
+  Settings,
   UserRound,
   X,
 } from "lucide-react"
 import { useEffect, useState } from "react"
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router"
 import { BrandMark } from "@/components/BrandMark"
+import { StudentSidebar } from "@/components/student/StudentSidebar"
 import { Button } from "@/components/ui/Button"
 import { useAppStore } from "@/store/appStore"
 import type { NavigationItem } from "@/app/navigation"
@@ -23,10 +25,26 @@ interface AppShellProps {
 function SidebarContent({
   navigation,
   onNavigate,
+  studentMode = false,
+  onLogout,
+  unreadNotifications = 0,
 }: {
   navigation: NavigationItem[]
   onNavigate?: () => void
+  studentMode?: boolean
+  onLogout: () => void
+  unreadNotifications?: number
 }) {
+  if (studentMode) {
+    return (
+      <StudentSidebar
+        navigation={navigation}
+        onNavigate={onNavigate}
+        onLogout={onLogout}
+        unreadNotifications={unreadNotifications}
+      />
+    )
+  }
   return (
     <>
       <div className="border-b border-line p-5">
@@ -76,6 +94,7 @@ export function AppShell({ navigation, portalLabel }: AppShellProps) {
   const { currentUser, metrics, logout, resetDemoData } = useAppStore()
   const navigate = useNavigate()
   const location = useLocation()
+  const isStudent = currentUser?.role === "STUDENT"
 
   useEffect(() => {
     if (!mobileOpen && !userOpen) return
@@ -90,8 +109,12 @@ export function AppShell({ navigation, portalLabel }: AppShellProps) {
   }, [mobileOpen, userOpen])
 
   const currentLabel =
-    navigation.find((item) => location.pathname.startsWith(item.to))?.label ??
-    portalLabel
+    navigation
+      .flatMap((item) => [item, ...(item.children ?? [])])
+      .filter((item) =>
+        location.pathname === item.to || location.pathname.startsWith(item.to + "/"),
+      )
+      .sort((a, b) => b.to.length - a.to.length)[0]?.label ?? portalLabel
 
   const handleLogout = () => {
     logout()
@@ -108,8 +131,8 @@ export function AppShell({ navigation, portalLabel }: AppShellProps) {
   return (
     <div className="min-h-screen bg-page text-ink">
       <aside
-        className={`fixed inset-y-0 left-0 z-30 hidden flex-col border-r border-line bg-white transition-[width] lg:flex ${
-          desktopCollapsed ? "w-20" : "w-64"
+        className={`fixed inset-y-0 left-0 z-30 hidden flex-col border-r transition-[width] lg:flex ${isStudent ? "border-white/10 bg-[#091b30] text-white" : "border-line bg-white"} ${
+          desktopCollapsed ? "w-20" : isStudent ? "w-72" : "w-64"
         }`}
       >
         {desktopCollapsed ? (
@@ -129,8 +152,12 @@ export function AppShell({ navigation, portalLabel }: AppShellProps) {
                   className={({ isActive }) =>
                     `grid size-12 place-items-center rounded-xl transition ${
                       isActive
-                        ? "bg-brand-soft text-brand-strong"
-                        : "text-ink-muted hover:bg-surface-muted"
+                        ? isStudent
+                          ? "bg-emerald-400/15 text-emerald-300"
+                          : "bg-brand-soft text-brand-strong"
+                        : isStudent
+                          ? "text-slate-300 hover:bg-white/10 hover:text-white"
+                          : "text-ink-muted hover:bg-surface-muted"
                     }`
                   }
                 >
@@ -139,9 +166,22 @@ export function AppShell({ navigation, portalLabel }: AppShellProps) {
                 </NavLink>
               ))}
             </nav>
+            {isStudent ? (
+              <div className="flex flex-col items-center gap-1 border-t border-white/10 p-2">
+                <Link to="/notifications" aria-label="Thông báo" title="Thông báo" className="relative grid size-11 place-items-center rounded-xl text-slate-300 hover:bg-white/10">
+                  <Bell className="size-5" />
+                  {metrics.unreadNotifications > 0 ? (
+                    <span className="absolute right-0 top-0 grid min-w-5 place-items-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white">{metrics.unreadNotifications}</span>
+                  ) : null}
+                </Link>
+                <Link to="/profile" aria-label="Thông tin cá nhân" title="Thông tin cá nhân" className="grid size-11 place-items-center rounded-xl text-slate-300 hover:bg-white/10"><UserRound className="size-5" /></Link>
+                <Link to="/student/settings" aria-label="Cài đặt" title="Cài đặt" className="grid size-11 place-items-center rounded-xl text-slate-300 hover:bg-white/10"><Settings className="size-5" /></Link>
+                <button type="button" onClick={handleLogout} aria-label="Đăng xuất" title="Đăng xuất" className="grid size-11 place-items-center rounded-xl text-slate-300 hover:bg-white/10"><LogOut className="size-5" /></button>
+              </div>
+            ) : null}
           </>
         ) : (
-          <SidebarContent navigation={navigation} />
+          <SidebarContent navigation={navigation} studentMode={isStudent} onLogout={handleLogout} unreadNotifications={metrics.unreadNotifications} />
         )}
       </aside>
 
@@ -157,10 +197,10 @@ export function AppShell({ navigation, portalLabel }: AppShellProps) {
             onClick={() => setMobileOpen(false)}
             aria-label="Đóng điều hướng"
           />
-          <aside className="relative flex h-full w-[min(86vw,20rem)] flex-col bg-white shadow-2xl">
+          <aside className={isStudent ? "relative flex h-full w-[min(86vw,20rem)] flex-col bg-[#091b30] text-white shadow-2xl" : "relative flex h-full w-[min(86vw,20rem)] flex-col bg-white shadow-2xl"}>
             <Button
               variant="ghost"
-              className="absolute right-3 top-3 z-10 !px-3"
+              className={isStudent ? "absolute right-3 top-3 z-10 !px-3 !text-white" : "absolute right-3 top-3 z-10 !px-3"}
               onClick={() => setMobileOpen(false)}
               aria-label="Đóng"
               autoFocus
@@ -170,6 +210,9 @@ export function AppShell({ navigation, portalLabel }: AppShellProps) {
             <SidebarContent
               navigation={navigation}
               onNavigate={() => setMobileOpen(false)}
+              studentMode={isStudent}
+              onLogout={handleLogout}
+              unreadNotifications={metrics.unreadNotifications}
             />
           </aside>
         </div>
@@ -177,7 +220,7 @@ export function AppShell({ navigation, portalLabel }: AppShellProps) {
 
       <div
         className={`transition-[padding] ${
-          desktopCollapsed ? "lg:pl-20" : "lg:pl-64"
+          desktopCollapsed ? "lg:pl-20" : isStudent ? "lg:pl-72" : "lg:pl-64"
         }`}
       >
         <header className="sticky top-0 z-20 flex h-18 items-center justify-between border-b border-line bg-white/95 px-4 backdrop-blur md:px-7">

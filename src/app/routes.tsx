@@ -35,6 +35,7 @@ import {
   ProfilePage,
 } from "@/pages/shared/SharedPages"
 import { StudentDashboard } from "@/pages/student/StudentDashboard"
+import { StudentSettingsPage, StudentUsageHistoryPage } from "@/pages/student/StudentUtilityPages"
 import {
   ActiveTripPage,
   MyVehicleBookingPage,
@@ -91,6 +92,8 @@ export const router = createBrowserRouter([
       { path: "vehicles/:id/reserve", Component: VehicleReservationPage },
       { path: "my-booking", Component: MyVehicleBookingPage },
       { path: "active-trip", Component: ActiveTripPage },
+      { path: "history", Component: StudentUsageHistoryPage },
+      { path: "settings", Component: StudentSettingsPage },
       { path: "return-vehicle", Component: VehicleReturnPage },
       { path: "hubs", Component: HubExplorerPage },
       { path: "hubs/:id", Component: HubDetailsPage },
